@@ -6,18 +6,29 @@
 // should publically acknowledge its source.
 // Classes GregorianDate, JulianDate, IsoDate, IslamicDate,
 // and HebrewDate
+#include <fstream>
+#include <sstream>
+#include <sys/types.h>
+#include <pwd.h>
 #include <string>
 #include <math.h>
 #include <ctime>
 #include <iostream>
+#include <unistd.h>
 #include <stdlib.h>
 
 using namespace std;
 
 class IsoDate;
 
-char* DayName[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-		"Friday", "Saturday" };
+const char *DayName[7] =
+{   "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+    "Friday", "Saturday"
+};
+
+string MonthNames[] = { "January", "February", "March", "April", "May",
+                        "June", "July", "August", "September", "October", "November", "December"
+                      };
 
 // Absolute dates
 
@@ -26,511 +37,651 @@ char* DayName[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
 // 1 BC is 1 AD.) Thus the Gregorian date January 1, 1 AD is absolute date
 // number 1.
 
-int XdayOnOrBefore(int d, int x) {
+int
+XdayOnOrBefore (int d, int x)
+{
 // Absolute date of the x-day on or before absolute date d.
 // x=0 means Sunday, x=1 means Monday, and so on.
 
-	return (d - ((d - x) % 7));
+    return (d - ((d - x) % 7));
 }
 
 //  Gregorian dates
 
-int LastDayOfGregorianMonth(int month, int year) {
+int
+LastDayOfGregorianMonth (int month, int year)
+{
 // Compute the last date of the month for the Gregorian calendar.
 
-	switch (month) {
-	case 2:
-		if ((((year % 4) == 0) && ((year % 100) != 0)) || ((year % 400) == 0))
-			return 29;
-		else
-			return 28;
-	case 4:
-	case 6:
-	case 9:
-	case 11:
-		return 30;
-	default:
-		return 31;
-	}
+    switch (month)
+    {
+    case 2:
+        if ((((year % 4) == 0) && ((year % 100) != 0)) || ((year % 400) == 0))
+            return 29;
+        else
+            return 28;
+    case 4:
+    case 6:
+    case 9:
+    case 11:
+        return 30;
+    default:
+        return 31;
+    }
 }
 
-class GregorianDate {
+class GregorianDate
+{
 private:
-	int year;   // 1...
-	int month;  // 1 == January, ..., 12 == December
-	int day;    // 1..LastDayOfGregorianMonth(month, year)
+    int year;			// 1...
+    int month;			// 1 == January, ..., 12 == December
+    int day;			// 1..LastDayOfGregorianMonth(month, year)
 
 public:
-	GregorianDate() {
-		time_t t = time(0);   // get time now
-		struct tm * now = localtime(&t);
-		month = now->tm_mon + 1;
-		day = now->tm_mday;
-		year = now->tm_year + 1900;
-	}
+    GregorianDate ()
+    {
+        time_t t = time (0);	// get time now
+        struct tm *now = localtime (&t);
+        month = now->tm_mon + 1;
+        day = now->tm_mday;
+        year = now->tm_year + 1900;
+    }
 
-	GregorianDate(int m, int d, int y) {
-		month = m;
-		day = d;
-		year = y;
-	}
+    GregorianDate (int m, int d, int y)
+    {
+        month = m;
+        day = d;
+        year = y;
+    }
 
-	GregorianDate(int d) { // Computes the Gregorian date from the absolute date.
+    GregorianDate (int d)
+    {   // Computes the Gregorian date from the absolute date.
 
-		// Search forward year by year from approximate year
-		year = d / 366;
-		while (d >= GregorianDate(1, 1, year + 1))
-			year++;
-		// Search forward month by month from January
-		month = 1;
-		while (d
-				> GregorianDate(month, LastDayOfGregorianMonth(month, year),
-						year))
-			month++;
-		day = d - GregorianDate(month, 1, year) + 1;
-	}
+        // Search forward year by year from approximate year
+        year = d / 366;
+        while (d >= GregorianDate (1, 1, year + 1))
+            year++;
+        // Search forward month by month from January
+        month = 1;
+        while (d
+                > GregorianDate (month, LastDayOfGregorianMonth (month, year),
+                                 year))
+            month++;
+        day = d - GregorianDate (month, 1, year) + 1;
+    }
 
-	operator int() { // Computes the absolute date from the Gregorian date.
-		int N = day;           // days this month
-		for (int m = month - 1; m > 0; m--) // days in prior months this year
-			N = N + LastDayOfGregorianMonth(m, year);
-		return (N                    // days this year
-		+ 365 * (year - 1)   // days in previous years ignoring leap days
-		+ (year - 1) / 4       // Julian leap days before this year...
-		- (year - 1) / 100     // ...minus prior century years...
-		+ (year - 1) / 400);   // ...plus prior years divisible by 400
-	}
+    operator   int ()
+    {   // Computes the absolute date from the Gregorian date.
+        int N = day;		// days this month
+        for (int m = month - 1; m > 0; m--)	// days in prior months this year
+            N = N + LastDayOfGregorianMonth (m, year);
+        return (N			// days this year
+                + 365 * (year - 1)	// days in previous years ignoring leap days
+                + (year - 1) / 4	// Julian leap days before this year...
+                - (year - 1) / 100	// ...minus prior century years...
+                + (year - 1) / 400);	// ...plus prior years divisible by 400
+    }
 
-	int GetMonth() {
-		return month;
-	}
-	int GetDay() {
-		return day;
-	}
-	int GetYear() {
-		return year;
-	}
+    int GetMonth ()
+    {
+        return month;
+    }
+    string GetMonthName ()
+    {
+        return MonthNames[GetMonth () - 1];
+    }
+    int GetDay ()
+    {
+        return day;
+    }
+    int GetYear ()
+    {
+        return year;
+    }
 
 };
 
-ostream& operator<<(ostream& c, GregorianDate d) {
-	c << d.GetMonth() << "/" << d.GetDay() << "/" << d.GetYear();
-	return c;
+ostream & operator<< (ostream & c, GregorianDate d)
+{
+    c << d.GetMonth () << "/" << d.GetDay () << "/" << d.GetYear ();
+    return c;
 }
+
 ;
 
-GregorianDate NthXday(int n, int x, int month, int year, int day = 0)
+GregorianDate
+NthXday (int n, int x, int month, int year, int day = 0)
 // The Gregorian date of nth x-day in month, year before/after optional day.
 // x = 0 means Sunday, x = 1 means Monday, and so on.  If n<0, return the nth
 // x-day before month day, year (inclusive).  If n>0, return the nth x-day
 // after month day, year (inclusive).  If day is omitted or 0, it defaults
 // to 1 if n>0, and month's last day otherwise.
-		{
-	if (n > 0) {
-		if (day == 0)
-			day = 1;  // default for positive n
-		return GregorianDate(
-				(7 * (n - 1))
-						+ XdayOnOrBefore(6 + GregorianDate(month, day, year),
-								x));
-	} else {
-		if (day == 0)
-			day = LastDayOfGregorianMonth(month, year);
-		;  // default for negative n
-		return GregorianDate(
-				(7 * (n + 1))
-						+ XdayOnOrBefore(GregorianDate(month, day, year), x));
-	}
+{
+    if (n > 0)
+    {
+        if (day == 0)
+            day = 1;		// default for positive n
+        return GregorianDate ((7 * (n - 1))
+                              + XdayOnOrBefore (6 +
+                                                GregorianDate (month, day,
+                                                        year), x));
+    }
+    else
+    {
+        if (day == 0)
+            day = LastDayOfGregorianMonth (month, year);
+        ;				// default for negative n
+        return GregorianDate ((7 * (n + 1))
+                              +
+                              XdayOnOrBefore (GregorianDate (month, day, year),
+                                              x));
+    }
 }
 
 // Julian dates
 
-const int JulianEpoch = -2; // Absolute date of start of Julian calendar
+const int JulianEpoch = -2;	// Absolute date of start of Julian calendar
 
-int LastDayOfJulianMonth(int month, int year) {
+int
+LastDayOfJulianMonth (int month, int year)
+{
 // Compute the last date of the month for the Julian calendar.
-	switch (month) {
-	case 2:
-		if ((year % 4) == 0)
-			return 29;
-		else
-			return 28;
-	case 4:
-	case 6:
-	case 9:
-	case 11:
-		return 30;
-	default:
-		return 31;
-	}
+    switch (month)
+    {
+    case 2:
+        if ((year % 4) == 0)
+            return 29;
+        else
+            return 28;
+    case 4:
+    case 6:
+    case 9:
+    case 11:
+        return 30;
+    default:
+        return 31;
+    }
 }
 
-class JulianDate {
+class JulianDate
+{
 private:
-	int year;   // 1...
-	int month;  // 1 == January, ..., 12 == December
-	int day;    // 1..LastDayOfJulianMonth(month, year)
+    int year;			// 1...
+    int month;			// 1 == January, ..., 12 == December
+    int day;			// 1..LastDayOfJulianMonth(month, year)
 
 public:
-	JulianDate(int m, int d, int y) {
-		month = m;
-		day = d;
-		year = y;
-	}
+    JulianDate (int m, int d, int y)
+    {
+        month = m;
+        day = d;
+        year = y;
+    }
 
-	JulianDate(int d) { // Computes the Julian date from the absolute date.
-		// Search forward year by year from approximate year
-		year = (d + JulianEpoch) / 366;
-		while (d >= JulianDate(1, 1, year + 1))
-			year++;
-		// Search forward month by month from January
-		month = 1;
-		while (d > JulianDate(month, LastDayOfJulianMonth(month, year), year))
-			month++;
-		day = d - JulianDate(month, 1, year) + 1;
-	}
+    JulianDate (int d)
+    {   // Computes the Julian date from the absolute date.
+        // Search forward year by year from approximate year
+        year = (d + JulianEpoch) / 366;
+        while (d >= JulianDate (1, 1, year + 1))
+            year++;
+        // Search forward month by month from January
+        month = 1;
+        while (d > JulianDate (month, LastDayOfJulianMonth (month, year), year))
+            month++;
+        day = d - JulianDate (month, 1, year) + 1;
+    }
 
-	operator int() { // Computes the absolute date from the Julian date.
+    operator   int ()
+    {   // Computes the absolute date from the Julian date.
 
-		int N = day;                         // days this month
-		for (int m = month - 1; m > 0; m--) // days in prior months this year
-			N = N + LastDayOfJulianMonth(m, year);
-		return (N                     // days this year
-		+ 365 * (year - 1)    // days in previous years ignoring leap days
-		+ (year - 1) / 4        // leap days before this year...
-		+ JulianEpoch);       // days elapsed before absolute date 1
-	}
+        int N = day;		// days this month
+        for (int m = month - 1; m > 0; m--)	// days in prior months this year
+            N = N + LastDayOfJulianMonth (m, year);
+        return (N			// days this year
+                + 365 * (year - 1)	// days in previous years ignoring leap days
+                + (year - 1) / 4	// leap days before this year...
+                + JulianEpoch);	// days elapsed before absolute date 1
+    }
 
-	int GetMonth() {
-		return month;
-	}
-	int GetDay() {
-		return day;
-	}
-	int GetYear() {
-		return year;
-	}
-	int absolute();
+    int GetMonth ()
+    {
+        return month;
+    }
+    int GetDay ()
+    {
+        return day;
+    }
+    int GetYear ()
+    {
+        return year;
+    }
+    int absolute ();
 
 };
 
-ostream& operator<<(ostream& c, JulianDate d) {
-	c << d.GetMonth() << "/" << d.GetDay() << "/" << d.GetYear();
-	return c;
+ostream & operator<< (ostream & c, JulianDate d)
+{
+    c << d.GetMonth () << "/" << d.GetDay () << "/" << d.GetYear ();
+    return c;
 }
+
 ;
 
 // ISO dates
 
-class IsoDate {
+class IsoDate
+{
 private:
-	int year;  // 1...
-	int week;  // 1..52 or 53
-	int day;   // 1..7
+    int year;			// 1...
+    int week;			// 1..52 or 53
+    int day;			// 1..7
 
 public:
-	IsoDate(int w, int d, int y) {
-		week = w;
-		day = d;
-		year = y;
-	}
+    IsoDate (int w, int d, int y)
+    {
+        week = w;
+        day = d;
+        year = y;
+    }
 
-	IsoDate(int d) { // Computes the ISO date from the absolute date.
-		year = GregorianDate(d - 3).GetYear();
-		if (d >= IsoDate(1, 1, year + 1))
-			year++;
-		if ((d % 7) == 0)
-			day = 7;      // Sunday
-		else
-			day = d % 7;  // Monday..Saturday
-		week = 1 + (d - IsoDate(1, 1, year)) / 7;
-	}
+    IsoDate (int d)
+    {   // Computes the ISO date from the absolute date.
+        year = GregorianDate (d - 3).GetYear ();
+        if (d >= IsoDate (1, 1, year + 1))
+            year++;
+        if ((d % 7) == 0)
+            day = 7;			// Sunday
+        else
+            day = d % 7;		// Monday..Saturday
+        week = 1 + (d - IsoDate (1, 1, year)) / 7;
+    }
 
-	operator int() { // Computes the absolute date from the ISO date.
-		return XdayOnOrBefore(GregorianDate(1, 4, year), 1) // days in prior years
-		+ 7 * (week - 1)                        // days in prior weeks this year
-		+ (day - 1);                              // prior days this week
-	}
+    operator   int ()
+    {   // Computes the absolute date from the ISO date.
+        return XdayOnOrBefore (GregorianDate (1, 4, year), 1)	// days in prior years
+               + 7 * (week - 1)		// days in prior weeks this year
+               + (day - 1);		// prior days this week
+    }
 
-	int GetWeek() {
-		return week;
-	}
-	int GetDay() {
-		return day;
-	}
-	int GetYear() {
-		return year;
-	}
+    int GetWeek ()
+    {
+        return week;
+    }
+    int GetDay ()
+    {
+        return day;
+    }
+    int GetYear ()
+    {
+        return year;
+    }
 
 };
 
-ostream& operator<<(ostream& c, IsoDate d) {
-	c << d.GetWeek() << "/" << d.GetDay() << "/" << d.GetYear();
-	return c;
+ostream & operator<< (ostream & c, IsoDate d)
+{
+    c << d.GetWeek () << "/" << d.GetDay () << "/" << d.GetYear ();
+    return c;
 }
 
 // Islamic dates
 
-const int IslamicEpoch = 227014; // Absolute date of start of Islamic calendar
+const int IslamicEpoch = 227014;	// Absolute date of start of Islamic calendar
 
-int IslamicLeapYear(int year) {
+int
+IslamicLeapYear (int year)
+{
 // True if year is an Islamic leap year
 
-	if ((((11 * year) + 14) % 30) < 11)
-		return 1;
-	else
-		return 0;
+    if ((((11 * year) + 14) % 30) < 11)
+        return 1;
+    else
+        return 0;
 }
 
-int LastDayOfIslamicMonth(int month, int year) {
+int
+LastDayOfIslamicMonth (int month, int year)
+{
 // Last day in month during year on the Islamic calendar.
 
-	if (((month % 2) == 1) || ((month == 12) && IslamicLeapYear(year)))
-		return 30;
-	else
-		return 29;
+    if (((month % 2) == 1) || ((month == 12) && IslamicLeapYear (year)))
+        return 30;
+    else
+        return 29;
 }
 
-class IslamicDate {
+class IslamicDate
+{
 private:
-	int year;   // 1...
-	int month;  // 1..13 (12 in a common year)
-	int day;    // 1..LastDayOfIslamicMonth(month,year)
+    int year;			// 1...
+    int month;			// 1..13 (12 in a common year)
+    int day;			// 1..LastDayOfIslamicMonth(month,year)
 
 public:
-	IslamicDate(int m, int d, int y) {
-		month = m;
-		day = d;
-		year = y;
-	}
+    IslamicDate (int m, int d, int y)
+    {
+        month = m;
+        day = d;
+        year = y;
+    }
 
-	IslamicDate(int d) { // Computes the Islamic date from the absolute date.
-		if (d <= IslamicEpoch) { // Date is pre-Islamic
-			month = 0;
-			day = 0;
-			year = 0;
-		} else {
-			// Search forward year by year from approximate year
-			year = (d - IslamicEpoch) / 355;
-			while (d >= IslamicDate(1, 1, year + 1))
-				year++;
-			// Search forward month by month from Muharram
-			month = 1;
-			while (d
-					> IslamicDate(month, LastDayOfIslamicMonth(month, year),
-							year))
-				month++;
-			day = d - IslamicDate(month, 1, year) + 1;
-		}
-	}
+    IslamicDate (int d)
+    {   // Computes the Islamic date from the absolute date.
+        if (d <= IslamicEpoch)
+        {   // Date is pre-Islamic
+            month = 0;
+            day = 0;
+            year = 0;
+        }
+        else
+        {
+            // Search forward year by year from approximate year
+            year = (d - IslamicEpoch) / 355;
+            while (d >= IslamicDate (1, 1, year + 1))
+                year++;
+            // Search forward month by month from Muharram
+            month = 1;
+            while (d
+                    > IslamicDate (month, LastDayOfIslamicMonth (month, year),
+                                   year))
+                month++;
+            day = d - IslamicDate (month, 1, year) + 1;
+        }
+    }
 
-	operator int() { // Computes the absolute date from the Islamic date.
-		return (day                      // days so far this month
-		+ 29 * (month - 1)       // days so far...
-		+ month / 2                //            ...this year
-		+ 354 * (year - 1)       // non-leap days in prior years
-		+ (3 + (11 * year)) / 30 // leap days in prior years
-		+ IslamicEpoch);                // days before start of calendar
-	}
+    operator   int ()
+    {   // Computes the absolute date from the Islamic date.
+        return (day			// days so far this month
+                + 29 * (month - 1)	// days so far...
+                + month / 2		//            ...this year
+                + 354 * (year - 1)	// non-leap days in prior years
+                + (3 + (11 * year)) / 30	// leap days in prior years
+                + IslamicEpoch);	// days before start of calendar
+    }
 
-	int GetMonth() {
-		return month;
-	}
-	int GetDay() {
-		return day;
-	}
-	int GetYear() {
-		return year;
-	}
+    int GetMonth ()
+    {
+        return month;
+    }
+    int GetDay ()
+    {
+        return day;
+    }
+    int GetYear ()
+    {
+        return year;
+    }
 
 };
 
-ostream& operator<<(ostream& c, IslamicDate d) {
-	c << d.GetMonth() << "/" << d.GetDay() << "/" << d.GetYear();
-	return c;
+ostream & operator<< (ostream & c, IslamicDate d)
+{
+    c << d.GetMonth () << "/" << d.GetDay () << "/" << d.GetYear ();
+    return c;
 }
 
 // Hebrew dates
 
-const int HebrewEpoch = -1373429; // Absolute date of start of Hebrew calendar
+const int HebrewEpoch = -1373429;	// Absolute date of start of Hebrew calendar
 
-int HebrewLeapYear(int year) {
+int
+HebrewLeapYear (int year)
+{
 // True if year is an Hebrew leap year
 
-	if ((((7 * year) + 1) % 19) < 7)
-		return 1;
-	else
-		return 0;
+    if ((((7 * year) + 1) % 19) < 7)
+        return 1;
+    else
+        return 0;
 }
 
-int LastMonthOfHebrewYear(int year) {
+int
+LastMonthOfHebrewYear (int year)
+{
 // Last month of Hebrew year.
 
-	if (HebrewLeapYear(year))
-		return 13;
-	else
-		return 12;
+    if (HebrewLeapYear (year))
+        return 13;
+    else
+        return 12;
 }
 
-int HebrewCalendarElapsedDays(int year) {
+int
+HebrewCalendarElapsedDays (int year)
+{
 // Number of days elapsed from the Sunday prior to the start of the
 // Hebrew calendar to the mean conjunction of Tishri of Hebrew year.
 
-	int MonthsElapsed = (235 * ((year - 1) / 19)) // Months in complete cycles so far.
-	+ (12 * ((year - 1) % 19))          // Regular months in this cycle.
-			+ (7 * ((year - 1) % 19) + 1) / 19; // Leap months this cycle
-	int PartsElapsed = 204 + 793 * (MonthsElapsed % 1080);
-	int HoursElapsed = 5 + 12 * MonthsElapsed + 793 * (MonthsElapsed / 1080)
-			+ PartsElapsed / 1080;
-	int ConjunctionDay = 1 + 29 * MonthsElapsed + HoursElapsed / 24;
-	int ConjunctionParts = 1080 * (HoursElapsed % 24) + PartsElapsed % 1080;
-	int AlternativeDay;
-	if ((ConjunctionParts >= 19440)        // If new moon is at or after midday,
-	|| (((ConjunctionDay % 7) == 2)    // ...or is on a Tuesday...
-	&& (ConjunctionParts >= 9924)  // at 9 hours, 204 parts or later...
-			&& !(HebrewLeapYear(year)))   // ...of a common year,
-			|| (((ConjunctionDay % 7) == 1)    // ...or is on a Monday at...
-			&& (ConjunctionParts >= 16789) // 15 hours, 589 parts or later...
-					&& (HebrewLeapYear(year - 1)))) // at the end of a leap year
-		// Then postpone Rosh HaShanah one day
-		AlternativeDay = ConjunctionDay + 1;
-	else
-		AlternativeDay = ConjunctionDay;
-	if (((AlternativeDay % 7) == 0)   // If Rosh HaShanah would occur on Sunday,
-	|| ((AlternativeDay % 7) == 3)     // or Wednesday,
-			|| ((AlternativeDay % 7) == 5))    // or Friday
-		// Then postpone it one (more) day
-		return (1 + AlternativeDay);
-	else
-		return AlternativeDay;
+    int MonthsElapsed = (235 * ((year - 1) / 19))	// Months in complete cycles so far.
+                        + (12 * ((year - 1) % 19))	// Regular months in this cycle.
+                        + (7 * ((year - 1) % 19) + 1) / 19;	// Leap months this cycle
+    int PartsElapsed = 204 + 793 * (MonthsElapsed % 1080);
+    int HoursElapsed = 5 + 12 * MonthsElapsed + 793 * (MonthsElapsed / 1080)
+                       + PartsElapsed / 1080;
+    int ConjunctionDay = 1 + 29 * MonthsElapsed + HoursElapsed / 24;
+    int ConjunctionParts = 1080 * (HoursElapsed % 24) + PartsElapsed % 1080;
+    int AlternativeDay;
+    if ((ConjunctionParts >= 19440)	// If new moon is at or after midday,
+            || (((ConjunctionDay % 7) == 2)	// ...or is on a Tuesday...
+                && (ConjunctionParts >= 9924)	// at 9 hours, 204 parts or later...
+                && !(HebrewLeapYear (year)))	// ...of a common year,
+            || (((ConjunctionDay % 7) == 1)	// ...or is on a Monday at...
+                && (ConjunctionParts >= 16789)	// 15 hours, 589 parts or later...
+                && (HebrewLeapYear (year - 1))))	// at the end of a leap year
+        // Then postpone Rosh HaShanah one day
+        AlternativeDay = ConjunctionDay + 1;
+    else
+        AlternativeDay = ConjunctionDay;
+    if (((AlternativeDay % 7) == 0)	// If Rosh HaShanah would occur on Sunday,
+            || ((AlternativeDay % 7) == 3)	// or Wednesday,
+            || ((AlternativeDay % 7) == 5))	// or Friday
+        // Then postpone it one (more) day
+        return (1 + AlternativeDay);
+    else
+        return AlternativeDay;
 }
 
-int DaysInHebrewYear(int year) {
+int
+DaysInHebrewYear (int year)
+{
 // Number of days in Hebrew year.
 
-	return ((HebrewCalendarElapsedDays(year + 1))
-			- (HebrewCalendarElapsedDays(year)));
+    return ((HebrewCalendarElapsedDays (year + 1))
+            - (HebrewCalendarElapsedDays (year)));
 }
 
-int LongHeshvan(int year) {
+int
+LongHeshvan (int year)
+{
 // True if Heshvan is long in Hebrew year.
 
-	if ((DaysInHebrewYear(year) % 10) == 5)
-		return 1;
-	else
-		return 0;
+    if ((DaysInHebrewYear (year) % 10) == 5)
+        return 1;
+    else
+        return 0;
 }
 
-int ShortKislev(int year) {
+int
+ShortKislev (int year)
+{
 // True if Kislev is short in Hebrew year.
 
-	if ((DaysInHebrewYear(year) % 10) == 3)
-		return 1;
-	else
-		return 0;
+    if ((DaysInHebrewYear (year) % 10) == 3)
+        return 1;
+    else
+        return 0;
 }
 
-int LastDayOfHebrewMonth(int month, int year) {
+int
+LastDayOfHebrewMonth (int month, int year)
+{
 // Last day of month in Hebrew year.
 
-	if ((month == 2) || (month == 4) || (month == 6)
-			|| ((month == 8) && !(LongHeshvan(year)))
-			|| ((month == 9) && ShortKislev(year)) || (month == 10)
-			|| ((month == 12) && !(HebrewLeapYear(year))) || (month == 13))
-		return 29;
-	else
-		return 30;
+    if ((month == 2) || (month == 4) || (month == 6)
+            || ((month == 8) && !(LongHeshvan (year)))
+            || ((month == 9) && ShortKislev (year)) || (month == 10)
+            || ((month == 12) && !(HebrewLeapYear (year))) || (month == 13))
+        return 29;
+    else
+        return 30;
 }
 
-class HebrewDate {
+class HebrewDate
+{
 private:
-	int year;   // 1...
-	int month;  // 1..LastMonthOfHebrewYear(year)
-	int day;    // 1..LastDayOfHebrewMonth(month, year)
+    int year;			// 1...
+    int month;			// 1..LastMonthOfHebrewYear(year)
+    int day;			// 1..LastDayOfHebrewMonth(month, year)
 
 public:
-	HebrewDate(int m, int d, int y) {
-		month = m;
-		day = d;
-		year = y;
-	}
+    HebrewDate (int m, int d, int y)
+    {
+        month = m;
+        day = d;
+        year = y;
+    }
 
-	HebrewDate(int d) { // Computes the Hebrew date from the absolute date.
-		year = (d + HebrewEpoch) / 366; // Approximation from below.
-		// Search forward for year from the approximation.
-		while (d >= HebrewDate(7, 1, year + 1))
-			year++;
-		// Search forward for month from either Tishri or Nisan.
-		if (d < HebrewDate(1, 1, year))
-			month = 7;  //  Start at Tishri
-		else
-			month = 1;  //  Start at Nisan
-		while (d > HebrewDate(month, (LastDayOfHebrewMonth(month, year)), year))
-			month++;
-		// Calculate the day by subtraction.
-		day = d - HebrewDate(month, 1, year) + 1;
-	}
+    HebrewDate (int d)
+    {   // Computes the Hebrew date from the absolute date.
+        year = (d + HebrewEpoch) / 366;	// Approximation from below.
+        // Search forward for year from the approximation.
+        while (d >= HebrewDate (7, 1, year + 1))
+            year++;
+        // Search forward for month from either Tishri or Nisan.
+        if (d < HebrewDate (1, 1, year))
+            month = 7;		//  Start at Tishri
+        else
+            month = 1;		//  Start at Nisan
+        while (d > HebrewDate (month, (LastDayOfHebrewMonth (month, year)), year))
+            month++;
+        // Calculate the day by subtraction.
+        day = d - HebrewDate (month, 1, year) + 1;
+    }
 
-	operator int() { // Computes the absolute date of Hebrew date.
-		int DayInYear = day; // Days so far this month.
-		if (month < 7) { // Before Tishri, so add days in prior months
-						 // this year before and after Nisan.
-			int m = 7;
-			while (m <= (LastMonthOfHebrewYear(year))) {
-				DayInYear = DayInYear + LastDayOfHebrewMonth(m, year);
-				m++;
-			};
-			m = 1;
-			while (m < month) {
-				DayInYear = DayInYear + LastDayOfHebrewMonth(m, year);
-				m++;
-			}
-		} else { // Add days in prior months this year
-			int m = 7;
-			while (m < month) {
-				DayInYear = DayInYear + LastDayOfHebrewMonth(m, year);
-				m++;
-			}
-		}
-		return (DayInYear + (HebrewCalendarElapsedDays(year) // Days in prior years.
-		+ HebrewEpoch));         // Days elapsed before absolute date 1.
-	}
-	string GetMonthName() {
-		string monthNames[13] = { "Nisan", "Iyar", "Sivan", "Tamuz", "Av",
-				"Elul", "Tishri", "Marheshvan", "Kislev", "Tevet", "Shvat",
-				"Adar I", "Adar II" };
-		return monthNames[GetMonth() - 1];
-	}
-	string GetMonthNameHebrew() {
-		string monthNames[13] = { "נִיסָן", "אייר", "סיוון", "תַּמּוּז", "אָב",
-				"אֱלוּל", "תִּשׁרִי", "מרחשוון", "כסליו", "טֵבֵת", "שְׁבָט",
-				"אֲדָר א׳", " אֲדָר ב׳" };
-		return monthNames[GetMonth() - 1];
+    operator   int ()
+    {   // Computes the absolute date of Hebrew date.
+        int DayInYear = day;	// Days so far this month.
+        if (month < 7)
+        {   // Before Tishri, so add days in prior months
+            // this year before and after Nisan.
+            int m = 7;
+            while (m <= (LastMonthOfHebrewYear (year)))
+            {
+                DayInYear = DayInYear + LastDayOfHebrewMonth (m, year);
+                m++;
+            };
+            m = 1;
+            while (m < month)
+            {
+                DayInYear = DayInYear + LastDayOfHebrewMonth (m, year);
+                m++;
+            }
+        }
+        else
+        {   // Add days in prior months this year
+            int m = 7;
+            while (m < month)
+            {
+                DayInYear = DayInYear + LastDayOfHebrewMonth (m, year);
+                m++;
+            }
+        }
+        return (DayInYear + (HebrewCalendarElapsedDays (year)	// Days in prior years.
+                             + HebrewEpoch));	// Days elapsed before absolute date 1.
+    }
+    string GetMonthName ()
+    {
+        string monthNames[13] = { "Nisan", "Iyar", "Sivan", "Tamuz", "Av",
+                                  "Elul", "Tishri", "Marheshvan", "Kislev", "Tevet", "Shvat",
+                                  "Adar I", "Adar II"
+                                };
+        return monthNames[GetMonth () - 1];
+    }
+    string GetMonthNameHebrew ()
+    {
+        string monthNames[13] =
+        {   "נִיסָן", "אייר", "סיוון", "תַּמּוּז",
+            "אָב",
+            "אֱלוּל", "תִּשׁרִי", "מרחשוון", "כסליו",
+            "טֵבֵת", "שְׁבָט",
+            "אֲדָר א׳", " אֲדָר ב׳"
+        };
+        return monthNames[GetMonth () - 1];
 
-	}
-	int GetMonth() {
-		return month;
-	}
-	int GetDay() {
-		return day;
-	}
-	int GetYear() {
-		return year;
-	}
+    }
+    int GetMonth ()
+    {
+        return month;
+    }
+    int GetDay ()
+    {
+        return day;
+    }
+    int GetYear ()
+    {
+        return year;
+    }
 
 };
 
-ostream& operator<<(ostream& c, HebrewDate d) {
-	c << d.GetMonth() << "/" << d.GetDay() << "/" << d.GetYear();
-	return c;
+ostream & operator<< (ostream & c, HebrewDate d)
+{
+    c << d.GetMonth () << "/" << d.GetDay () << "/" << d.GetYear ();
+    return c;
 }
 
-int main(int argc, char **argv) {
+void checkMatch(string line, string exp) {
+    if(line.size()>exp.size()) {
+        if(line.substr(0,exp.size())==exp) {
+            cout << line.substr(exp.size()+1) << endl;
+        }
+    }
+}
 
-	int m, d, y;
-	GregorianDate now;
-	int ea = now;
-	HebrewDate hnow(ea);
-	cout << hnow.GetMonthName() << " " << hnow.GetDay() << ", "
-			<< hnow.GetYear() << endl;
+int
+main (int argc, char **argv)
+{
+
+    int m, d, y;
+    GregorianDate now;
+    int ea = now;
+    HebrewDate hnow (ea);
+
+    // get the user's home directory - we'll need it to check for calendar dates
+    struct passwd *pw = getpwuid (getuid ());
+    const char *homedir = pw->pw_dir;
+
+    // now let's build two strings with today's day of month, one in
+    // gregorian and the other in Hebrew.
+    stringstream gregday, hebday, filename;
+
+    gregday << now.GetMonthName () << " " << now.GetDay ();
+    hebday << hnow.GetMonthName () << " " << hnow.GetDay ();
+
+    cout << hebday.str () << ", " << hnow.GetYear () << " (" << gregday.
+         str () << ")" << endl;
+
+    // now we've output the date, let's look for calendar events!
+    filename << pw->pw_dir << "/" << ".calendar";
+    ifstream calendarFile;
+
+    calendarFile.open (filename.str ().c_str ());
+    if (calendarFile.is_open ())
+    {
+        string line;
+        while (calendarFile.good ())
+        {
+            /*
+            * now for every line, parse up to the first comma, and match against our
+            *  two dates
+            *
+            * TODO Add support for other calendars too?
+            */
+            getline(calendarFile, line);
+            checkMatch(line, hebday.str());
+            checkMatch(line, gregday.str());
+        }
+    }
+
+    return 0;
 }
