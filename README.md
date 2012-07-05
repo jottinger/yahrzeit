@@ -15,7 +15,7 @@ of Marhesvan as the Academy recommends.
 
 (I was using Marhesvan, but then realized that when I thought of it, it was 
 as "Cheshvan." A TODO is to make it so month names are customizable such that
-you can use whichever spellings you prefer instead of relying on my inconstent and
+you can use whichever spellings you prefer instead of relying on my inconsistent and
 non-normalized transliterations.)
 
 For Adar, the number is included; thus, "Adar 5" will not match, but "Adar I 5" 
