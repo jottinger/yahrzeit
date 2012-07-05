@@ -591,7 +591,7 @@ public:
     }
     string GetMonthName ()
     {
-        string monthNames[13] = { "Nisan", "Iyar", "Sivan", "Tamuz", "Av",
+        string monthNames[13] = { "Nisan", "Iyyar", "Sivan", "Tammuz", "Av",
                                   "Elul", "Tishri", "Marheshvan", "Kislev", "Tevet", "Shvat",
                                   "Adar I", "Adar II"
                                 };
