@@ -592,22 +592,10 @@ public:
     string GetMonthName ()
     {
         string monthNames[13] = { "Nisan", "Iyyar", "Sivan", "Tammuz", "Av",
-                                  "Elul", "Tishri", "Marheshvan", "Kislev", "Tevet", "Shvat",
+                                  "Elul", "Tishri", "Cheshvan", "Kislev", "Tevet", "Shvat",
                                   "Adar I", "Adar II"
                                 };
         return monthNames[GetMonth () - 1];
-    }
-    string GetMonthNameHebrew ()
-    {
-        string monthNames[13] =
-        {   "נִיסָן", "אייר", "סיוון", "תַּמּוּז",
-            "אָב",
-            "אֱלוּל", "תִּשׁרִי", "מרחשוון", "כסליו",
-            "טֵבֵת", "שְׁבָט",
-            "אֲדָר א׳", " אֲדָר ב׳"
-        };
-        return monthNames[GetMonth () - 1];
-
     }
     int GetMonth ()
     {
