@@ -1,12 +1,3 @@
-/*
- ============================================================================
- Name        : calendar.cpp
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C++,
- ============================================================================
- */
 // The following C++ code is translated from the Lisp code
 // in ``Calendrical Calculations'' by Nachum Dershowitz and
 // Edward M. Reingold, Software---Practice & Experience,
