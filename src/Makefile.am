@@ -1,3 +1,3 @@
-bin_PROGRAMS=calendar
-calendar_SOURCES=calendar.cpp
+bin_PROGRAMS=yahrzeit
+calendar_SOURCES=yahrzeit.cpp
 

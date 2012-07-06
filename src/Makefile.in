@@ -231,9 +231,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-calendar$(EXEEXT): $(calendar_OBJECTS) $(calendar_DEPENDENCIES) $(EXTRA_calendar_DEPENDENCIES) 
-	@rm -f calendar$(EXEEXT)
-	$(CXXLINK) $(calendar_OBJECTS) $(calendar_LDADD) $(LIBS)
+yahrzeit$(EXEEXT): $(yahrzeit_OBJECTS) $(yahrzeit_DEPENDENCIES) $(EXTRA_yahrzeit_DEPENDENCIES) 
+	@rm -f yahrzeit$(EXEEXT)
+	$(CXXLINK) $(yahrzeit_OBJECTS) $(yahrzeit_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -241,7 +241,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calendar.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/yahrzeit.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
