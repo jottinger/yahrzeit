@@ -35,7 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-bin_PROGRAMS = calendar$(EXEEXT)
+bin_PROGRAMS = yahrzeit$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,9 +47,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_calendar_OBJECTS = calendar.$(OBJEXT)
-calendar_OBJECTS = $(am_calendar_OBJECTS)
-calendar_LDADD = $(LDADD)
+am_yahrzeit_OBJECTS = yahrzeit.$(OBJEXT)
+yahrzeit_OBJECTS = $(am_yahrzeit_OBJECTS)
+yahrzeit_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -59,8 +59,8 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(calendar_SOURCES)
-DIST_SOURCES = $(calendar_SOURCES)
+SOURCES = $(yahrzeit_SOURCES)
+DIST_SOURCES = $(yahrzeit_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -159,7 +159,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-calendar_SOURCES = calendar.cpp
+yahrzeit_SOURCES = yahrzeit.cpp
 all: all-am
 
 .SUFFIXES:
