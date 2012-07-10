@@ -2,10 +2,7 @@ package com.enigmastation.yahrzeit;
 
 import java.util.Calendar;
 
-public class HebrewDate {
-    int year;
-    int month;
-    int day;
+public class HebrewDate extends YahrzeitDate {
 
     final static int epoch = -1373429;    // Absolute date of start of Hebrew calendar
 
@@ -15,71 +12,49 @@ public class HebrewDate {
         this.year = year;
     }
 
-    private static int
-    lastDayOfGregorianMonth(int month, int year) {
-// Compute the last date of the month for the Gregorian calendar.
-
-        switch (month) {
-            case 2:
-                if ((((year % 4) == 0) && ((year % 100) != 0)) || ((year % 400) == 0))
-                    return 29;
-                else
-                    return 28;
-            case 4:
-            case 6:
-            case 9:
-            case 11:
-                return 30;
-            default:
-                return 31;
-        }
+    public HebrewDate(Calendar c) {
+        initFromAbsoluteDate(toAbsolute(c));
     }
-
 
     public HebrewDate() {
         Calendar c = Calendar.getInstance();
-        int gm = c.get(Calendar.MONTH)+1;
-        int gd = c.get(Calendar.DAY_OF_MONTH);
-        int gy = c.get(Calendar.YEAR);
-        int N = gd;        // days this month
-        for (int m = gm - 1; m > 0; m--)    // days in prior months this year
-            N = N + lastDayOfGregorianMonth(m, year);
-        int absoluteDay = (N            // days this year
-                + 365 * (gy - 1)    // days in previous years ignoring leap days
-                + (gy - 1) / 4    // Julian leap days before this year...
-                - (gy - 1) / 100    // ...minus prior century years...
-                + (gy - 1) / 400);    // ...plus prior years divisible by 400
+        int absoluteDay = toAbsolute(c);
         initFromAbsoluteDate(absoluteDay);
     }
 
+    @Override
+    public String getMonthName() {
+        String monthNames[] = {"Nisan", "Iyyar", "Sivan", "Tammuz", "Av",
+                "Elul", "Tishri", "Cheshvan", "Kislev", "Tevet", "Shvat",
+                "Adar I", "Adar II"
+        };
+        return monthNames[month - 1];
+    }
+
+    @Override
     public int toAbsolute() {
-        int dayInYear = day;    // Days so far this month.
-        if (month < 7) {   // Before Tishri, so add days in prior months
+        int dayInYear = getDay();    // Days so far this month.
+        if (getMonth() < 7) {   // Before Tishri, so add days in prior months
             // this year before and after Nisan.
             int m = 7;
-            while (m <= (lastMonth(year))) {
-                dayInYear = dayInYear + lastDayOfMonth(m, year);
+            while (m <= (lastMonth(getYear()))) {
+                dayInYear = dayInYear + lastDayOfMonth(m, getYear());
                 m++;
             }
-            ;
             m = 1;
-            while (m < month) {
-                dayInYear = dayInYear + lastDayOfMonth(m, year);
+            while (m < getMonth()) {
+                dayInYear = dayInYear + lastDayOfMonth(m, getYear());
                 m++;
             }
         } else {   // Add days in prior months this year
             int m = 7;
-            while (m < month) {
-                dayInYear = dayInYear + lastDayOfMonth(m, year);
+            while (m < getMonth()) {
+                dayInYear = dayInYear + lastDayOfMonth(m, getYear());
                 m++;
             }
         }
-        return (dayInYear + (elapsedDays(year)    // Days in prior years.
+        return (dayInYear + (elapsedDays(getYear())    // Days in prior years.
                 + epoch));    // Days elapsed before absolute date 1.
-    }
-
-    public HebrewDate(int d) {
-        initFromAbsoluteDate(d);
     }
 
     private void initFromAbsoluteDate(int d) {
@@ -91,17 +66,14 @@ public class HebrewDate {
             month = 7;        //  Start at Tishri
         else
             month = 1;        //  Start at Nisan
-        while (d > new HebrewDate(month, (lastDayOfMonth(month, year)), year).toAbsolute())
+        while (d > new HebrewDate(getMonth(), (lastDayOfMonth(getMonth(), year)), year).toAbsolute())
             month++;
         // Calculate the day by subtraction.
-        day = d - new HebrewDate(month, 1, year).toAbsolute() + 1;
+        day = d - new HebrewDate(getMonth(), 1, year).toAbsolute() + 1;
     }
 
     static boolean isLeapYear(int year) {
-        if ((((7 * year) + 1) % 19) < 7)
-            return true;
-        else
-            return false;
+        return (((7 * year) + 1) % 19) < 7;
     }
 
     static int lastMonth(int year) {
@@ -167,24 +139,5 @@ public class HebrewDate {
             return 30;
     }
 
-    String getMonthName() {
-        String monthNames[] = {"Nisan", "Iyyar", "Sivan", "Tammuz", "Av",
-                "Elul", "Tishri", "Cheshvan", "Kislev", "Tevet", "Shvat",
-                "Adar I", "Adar II"
-        };
-        return monthNames[month - 1];
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public int getMonth() {
-        return month;
-    }
-
-    public int getDay() {
-        return day;
-    }
 }
 
