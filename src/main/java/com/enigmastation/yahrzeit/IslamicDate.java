@@ -55,7 +55,7 @@ public class IslamicDate extends YahrzeitDate {
 
     @Override
     public String getMonthName() {
-        String[] monthNames = {"Muharram", "Safar", "Rabi I", "Rabi II," +
+        String[] monthNames = {"Muharram", "Safar", "Rabi I", "Rabi II",
                 "Jumada I", "Jumada II", "Rajab", "Sha'ban", "Ramadan", "Shawwal", "Dhu'l Qa'dah", "Dhu'l-Hijja"};
         return monthNames[getMonth()];
     }

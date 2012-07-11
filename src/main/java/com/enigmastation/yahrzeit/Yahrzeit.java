@@ -1,5 +1,6 @@
 package com.enigmastation.yahrzeit;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 import java.io.BufferedReader;
@@ -42,6 +43,7 @@ public class Yahrzeit {
         if (outputToday) {
             show(showHebrew, hebrew);
             show(showIslamic, islamic);
+            show(showGregorian, gregorian);
         }
         File calendarFile = new File(System.getProperty("user.home") +
                 System.getProperty("file.separator") + ".calendar");
@@ -76,6 +78,7 @@ public class Yahrzeit {
 
     public static void main(String[] args) {
         Yahrzeit y = new Yahrzeit();
+        new JCommander(y, args);
         y.run();
     }
 }

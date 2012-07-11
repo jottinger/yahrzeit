@@ -4,7 +4,9 @@ import java.util.Calendar;
 
 public class GregorianDate extends YahrzeitDate {
     public GregorianDate(Calendar c) {
-        //To change body of created methods use File | Settings | File Templates.
+        month=c.get(Calendar.MONTH);
+        day=c.get(Calendar.DAY_OF_MONTH);
+        year=c.get(Calendar.YEAR);
     }
 
     @Override
